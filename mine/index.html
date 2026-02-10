@@ -9,18 +9,17 @@
 		:root{--pink:#ffd1e8;--deep-pink:#ff7bb3;--card:#fff0f6}
 		html,body{height:100%;margin:0;font-family:Montserrat,system-ui,Arial,sans-serif}
 		body{background:linear-gradient(180deg,var(--pink),#ffe6f5);display:flex;align-items:center;justify-content:center}
-		.card{background:rgba(255,255,255,0.85);border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(255,123,179,0.12);text-align:center;max-width:720px;width:92%}
+		.card{background:rgba(255,255,255,0.85);border-radius:18px;padding:30px;box-shadow:0 10px 30px rgba(255,123,179,0.12);text-align:center;max-width:720px;width:92%;position:relative}
 		h1{margin:0 0 12px;color:#b30f5a;font-size:2.2rem}
 		p.lead{margin:0 0 20px;color:#6b2340}
-		.buttons{display:flex;gap:18px;justify-content:center;margin-bottom:16px}
+		.buttons{display:flex;gap:18px;justify-content:center;margin-bottom:16px;position:relative}
 		button{cursor:pointer;border:0;padding:14px 26px;border-radius:999px;font-weight:700;font-size:1rem;transition:transform .45s cubic-bezier(.2,.8,.2,1),box-shadow .18s;background:var(--deep-pink);color:white;will-change:transform}
+		button:disabled{opacity:0.7;cursor:not-allowed}
 		button.no{background:#ff8fb3}
 		button:active{transform:scale(.98)}
 		.gifs{display:flex;gap:18px;justify-content:center;margin-top:14px}
 		.gifs img{width:160px;height:160px;object-fit:cover;border-radius:12px;box-shadow:0 8px 18px rgba(179,11,90,0.14)}
 		.message{margin-top:12px;font-weight:700;color:#b30f5a;min-height:28px}
-		/* playful no-button slide (handled in JS) */
-		/* small hearts animation */
 		.hearts{position:absolute;inset:0;pointer-events:none}
 		@keyframes floatUp{from{transform:translateY(0);opacity:1}to{transform:translateY(-120px) rotate(10deg);opacity:0}}
 		.heart{position:absolute;font-size:20px;color:#ff5fa3;animation:floatUp 2s ease forwards}
@@ -49,32 +48,44 @@
 		const no = document.getElementById('no');
 		const msg = document.getElementById('message');
 		const hearts = document.getElementById('hearts');
+		const buttonsContainer = document.querySelector('.buttons');
 
 		yes.addEventListener('click', ()=>{
 			msg.textContent = 'Love youpaa 💕...ummahh';
 			burstHearts(10);
 		});
 
-		// On click, smoothly slide the No button to a random position, then return
+		// On click, smoothly slide the No button to a random position within the buttons container
 		no.addEventListener('click', (e)=>{
-			const rect = no.getBoundingClientRect();
-			const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-			const margin = 20; // keep some spacing from edges
-			const maxLeft = Math.max(0, vw - rect.width - margin);
-			const newLeft = Math.floor(Math.random() * (maxLeft - margin + 1)) + margin;
-			const offsetX = newLeft - rect.left;
-			const offsetY = (Math.random() - 0.5) * 18; // slight vertical variance
+			if(no.disabled) return; // Prevent clicking while animating
+			
+			no.disabled = true; // Disable button during animation
+			
+			const containerRect = buttonsContainer.getBoundingClientRect();
+			const buttonRect = no.getBoundingClientRect();
+			
+			// Calculate max movement within the buttons container
+			const containerWidth = containerRect.width;
+			const buttonWidth = buttonRect.width;
+			const maxOffset = Math.max(0, containerWidth - buttonWidth - 36); // 36 = gap + padding
+			
+			// Random offset between -maxOffset/2 to +maxOffset/2 to stay within container
+			const offsetX = (Math.random() - 0.5) * maxOffset;
+			const offsetY = (Math.random() - 0.5) * 20;
 
 			msg.textContent = "ntha enna istolle ponnu. 💗";
 
 			no.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
 
-			// return the button after the slide completes
-			setTimeout(()=>{ no.style.transform = ''; }, 900);
+			// Return button to original position and re-enable after animation
+			setTimeout(()=>{ 
+				no.style.transform = ''; 
+				no.disabled = false;
+			}, 900);
 		});
 
 		function burstHearts(n){
-			for(let i=0;i<n;i++){
+			for(let i=0;i<n;i++){ 
 				const el = document.createElement('div');
 				el.className='heart';
 				el.style.left = (50 + (Math.random()-0.5)*60) + '%';
